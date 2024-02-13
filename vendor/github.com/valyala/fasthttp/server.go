@@ -2587,8 +2587,8 @@ func writeResponse(ctx *RequestCtx, w *bufio.Writer) error {
 }
 
 const (
-	defaultReadBufferSize  = 65536
-	defaultWriteBufferSize = 65536
+	defaultReadBufferSize  = 4096
+	defaultWriteBufferSize = 4096
 )
 
 func acquireByteReader(ctxP **RequestCtx) (*bufio.Reader, error) {
