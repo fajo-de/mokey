@@ -19,14 +19,18 @@
 						<i class="fa fa-lock text-center me-1"></i> 
 						Password
 					</a>
+					{{ if ConfigValueBool "accounts.enable_user_security" }}
 					<a class="nav-link{{ if eq $.path "security" }} active{{end}}" id="security-tab" href="/security" role="tab">
 						<i class="fa fa-shield text-center me-1"></i> 
 						Security
 					</a>
+					{{ end }}
+					{{ if ConfigValueBool "accounts.enable_user_sshkey" }}
 					<a class="nav-link{{ if eq $.path "sshkey" }} active{{end}}" id="sshkey-tab" href="/sshkey" role="tab">
 						<i class="fa fa-key text-center me-1"></i> 
 						SSH Keys
 					</a>
+					{{ end }}
 					<a class="nav-link{{ if eq $.path "otp" }} active{{end}}" id="otp-tab" href="/otp" role="tab">
 						<i class="fa fa-fingerprint text-center me-1"></i> 
 						OTP Tokens
@@ -47,13 +51,17 @@
                     {{ template "password.html" . }}
                 </div>
                 {{ else if eq $.path "security" }}
+			{{ if ConfigValueBool "accounts.enable_user_security" }}
 				<div class="tab-pane fade show active" id="security" role="tabpanel" aria-labelledby="security-tab">
                     {{ template "security.html" . }}
                 </div>
+			{{ end }}
                 {{ else if eq $.path "sshkey" }}
+			{{ if ConfigValueBool "accounts.enable_user_sshkey" }}
 				<div class="tab-pane fade show active" id="sshkey" role="tabpanel" aria-labelledby="sshkey-tab">
                     {{ template "sshkey-list.html" . }}
                 </div>
+			{{ end }}
                 {{ else if eq $.path "otp" }}
 				<div class="tab-pane fade show active" id="otp" role="tabpanel" aria-labelledby="otp-tab">
                     {{ template "otptoken-list.html" . }}

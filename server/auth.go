@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	ipa "github.com/ubccr/goipa"
+	ipa "github.com/ubccr/mokey/ipa"
 )
 
 func isBlocked(username string) bool {
@@ -28,9 +28,9 @@ func (r *Router) isLoggedIn(c *fiber.Ctx) (bool, error) {
 		return false, errors.New("Failed to get session")
 	}
 
-	username := sess.Get(SessionKeyUsername)
-	sid := sess.Get(SessionKeySID)
-	authenticated := sess.Get(SessionKeyAuthenticated)
+	username	:= sess.Get(SessionKeyUsername)
+	sid		:= sess.Get(SessionKeySID)
+	authenticated	:= sess.Get(SessionKeyAuthenticated)
 	if sid == nil || username == nil || authenticated == nil {
 		return false, errors.New("Invalid session")
 	}
@@ -216,10 +216,10 @@ func (r *Router) CheckUser(c *fiber.Ctx) error {
 }
 
 func (r *Router) Authenticate(c *fiber.Ctx) error {
-	username := c.FormValue("username")
-	password := c.FormValue("password")
-	challenge := c.FormValue("challenge")
-	otp := c.FormValue("otp")
+	username	:= c.FormValue("username")
+	password	:= c.FormValue("password")
+	challenge	:= c.FormValue("challenge")
+	otp		:= c.FormValue("otp")
 
 	if username == "" {
 		return c.Status(fiber.StatusBadRequest).SendString("Please provide a username")

@@ -8,7 +8,7 @@ import (
 
 	valid "github.com/asaskevich/govalidator"
 	"github.com/spf13/viper"
-	"github.com/ubccr/goipa"
+	"github.com/ubccr/mokey/ipa"
 )
 
 var (

@@ -23,7 +23,7 @@ import (
 	"github.com/mileusna/useragent"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/ubccr/goipa"
+	"github.com/ubccr/mokey/ipa"
 )
 
 const crlf = "\r\n"
@@ -185,16 +185,16 @@ func (e *Emailer) sendEmail(user *ipa.User, ctx *fiber.Ctx, subject, tmpl string
 
 	ua := useragent.Parse(ctx.Get(fiber.HeaderUserAgent))
 
-	data["os"] = ua.OS
-	data["browser"] = ua.Name
-	data["user"] = user
-	data["date"] = time.Now()
-	data["contact"] = viper.GetString("email.from")
-	data["sig"] = viper.GetString("email.signature")
-	data["site_name"] = viper.GetString("site.name")
-	data["help_url"] = viper.GetString("site.help_url")
-	data["homepage"] = viper.GetString("site.homepage")
-	data["base_url"] = BaseURL(ctx)
+	data["os"]		= ua.OS
+	data["browser"]		= ua.Name
+	data["user"]		= user
+	data["date"]		= time.Now()
+	data["contact"]		= viper.GetString("email.from")
+	data["sig"]		= viper.GetString("email.signature")
+	data["site_name"]	= viper.GetString("site.name")
+	data["help_url"]	= viper.GetString("site.help_url")
+	data["homepage"]	= viper.GetString("site.homepage")
+	data["base_url"]	= BaseURL(ctx)
 
 	var text bytes.Buffer
 	err := e.templates.ExecuteTemplate(&text, tmpl+".txt", data)
@@ -221,9 +221,9 @@ func (e *Emailer) sendEmail(user *ipa.User, ctx *fiber.Ctx, subject, tmpl string
 	header := make(textproto.MIMEHeader)
 	header.Set("Mime-Version", "1.0")
 	header.Set("Date", time.Now().Format(time.RFC1123Z))
-	header.Set("To", user.Email)
-	header.Set("Subject", fmt.Sprintf("[%s] %s", viper.GetString("site.name"), subject))
-	header.Set("From", viper.GetString("email.from"))
+	header.Set("To", fmt.Sprintf("<%s>", user.Email))
+	header.Set("Subject", fmt.Sprintf("%s%s%s", viper.GetString("email.subject_prefix"), subject, viper.GetString("email.subject_suffix")))
+	header.Set("From", fmt.Sprintf("\"%s\" <%s>", viper.GetString("email.from_name"), viper.GetString("email.from")))
 
 	var multipartBody bytes.Buffer
 	mp := multipart.NewWriter(&multipartBody)

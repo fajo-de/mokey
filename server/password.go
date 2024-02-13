@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	ipa "github.com/ubccr/goipa"
+	ipa "github.com/ubccr/mokey/ipa"
 )
 
 var (
@@ -116,9 +116,9 @@ func (r *Router) PasswordChange(c *fiber.Ctx) error {
 	}
 
 	password := c.FormValue("password")
-	newpass := c.FormValue("newpassword")
+	newpass  := c.FormValue("newpassword")
 	newpass2 := c.FormValue("newpassword2")
-	otp := c.FormValue("otpcode")
+	otp      := c.FormValue("otpcode")
 
 	if user.OTPOnly() && otp == "" {
 		vars["message"] = "Please enter the 6-digit OTP code from your mobile app"

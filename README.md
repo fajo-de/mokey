@@ -43,7 +43,7 @@ Note: mokey needs to be installed on a machine already enrolled in FreeIPA.
 It's also recommended to have the ipa-admintools package installed. Enrolling a
 host in FreeIPA is outside the scope of this document.
 
-To install mokey download a copy of the pre-compiled binary [here](https://github.com/ubccr/mokey/releases).
+To install mokey download a copy of the pre-compiled binary [here](https://github.com/fajo-de/mokey/releases).
 
 tar.gz archive:
 
@@ -83,7 +83,7 @@ $ chgrp mokey /etc/mokey/private/mokeyapp.keytab
 Edit mokey configuration file and set path to keytab file. The values for
 `token_secret` and `csrf_secret` will be automatically generated for you if
 left blank. Set these secret values if you'd like sessions to persist after a restart.
-For other site specific config options [see here](https://github.com/ubccr/mokey/blob/main/mokey.toml.sample):
+For other site specific config options [see here](https://github.com/fajo-de/mokey/blob/main/mokey.toml.sample):
 
 ```
 $ vim /etc/mokey/mokey.toml
@@ -144,7 +144,7 @@ application see [here](examples/mokey-oidc/main.go).
 First, you will need Go v1.19 or greater. Clone the repository:
 
 ```
-$ git clone https://github.com/ubccr/mokey
+$ git clone https://github.com/fajo-de/mokey
 $ cd mokey
 $ go build .
 ```

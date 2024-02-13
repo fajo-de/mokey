@@ -9,7 +9,7 @@ import (
 	"github.com/pquerna/otp/totp"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/ubccr/goipa"
+	"github.com/ubccr/mokey/ipa"
 )
 
 func getHashAlgorithm() otp.Algorithm {
@@ -25,16 +25,16 @@ func getHashAlgorithm() otp.Algorithm {
 }
 
 func (r *Router) tokenList(c *fiber.Ctx, vars fiber.Map) error {
-	client := r.userClient(c)
-	user := r.user(c)
+	client	:= r.userClient(c)
+	user	:= r.user(c)
 
 	tokens, err := client.FetchOTPTokens(user.Username)
 	if err != nil {
 		return err
 	}
 
-	vars["otptokens"] = tokens
-	vars["user"] = user
+	vars["otptokens"]	= tokens
+	vars["user"]		= user
 	return c.Render("otptoken-list.html", vars)
 }
 
@@ -80,10 +80,10 @@ func (r *Router) OTPTokenRemove(c *fiber.Ctx) error {
 }
 
 func (r *Router) OTPTokenEnable(c *fiber.Ctx) error {
-	uuid := c.FormValue("uuid")
-	client := r.userClient(c)
-	username := r.username(c)
-	vars := fiber.Map{}
+	uuid		:= c.FormValue("uuid")
+	client		:= r.userClient(c)
+	username	:= r.username(c)
+	vars		:= fiber.Map{}
 
 	err := client.EnableOTPToken(uuid)
 	if err != nil {
@@ -99,10 +99,10 @@ func (r *Router) OTPTokenEnable(c *fiber.Ctx) error {
 }
 
 func (r *Router) OTPTokenDisable(c *fiber.Ctx) error {
-	uuid := c.FormValue("uuid")
-	client := r.userClient(c)
-	username := r.username(c)
-	vars := fiber.Map{}
+	uuid		:= c.FormValue("uuid")
+	client		:= r.userClient(c)
+	username	:= r.username(c)
+	vars		:= fiber.Map{}
 
 	err := client.DisableOTPToken(uuid)
 	if err != nil {
@@ -123,13 +123,13 @@ func (r *Router) OTPTokenDisable(c *fiber.Ctx) error {
 }
 
 func (r *Router) OTPTokenVerify(c *fiber.Ctx) error {
-	otpcode := c.FormValue("otpcode")
-	uri := c.FormValue("uri")
-	uuid := c.FormValue("uuid")
-	action := c.FormValue("action")
-	client := r.userClient(c)
-	user := r.user(c)
-	vars := fiber.Map{}
+	otpcode	:= c.FormValue("otpcode")
+	uri	:= c.FormValue("uri")
+	uuid	:= c.FormValue("uuid")
+	action	:= c.FormValue("action")
+	client	:= r.userClient(c)
+	user	:= r.user(c)
+	vars	:= fiber.Map{}
 
 	key, err := otp.NewKeyFromURL(uri)
 	if err != nil || action == "cancel" {
@@ -199,15 +199,15 @@ func (r *Router) OTPTokenVerify(c *fiber.Ctx) error {
 }
 
 func (r *Router) OTPTokenAdd(c *fiber.Ctx) error {
-	client := r.userClient(c)
+	client	:= r.userClient(c)
 
-	desc := c.FormValue("desc")
+	desc	:= c.FormValue("desc")
 
-	token := &ipa.OTPToken{
+	token	:= &ipa.OTPToken{
 		Type:        ipa.TokenTypeTOTP,
 		Algorithm:   strings.ToLower(getHashAlgorithm().String()),
 		Description: desc,
-		NotBefore:   time.Now(),
+		NotBefore:   time.Now().UTC(),
 	}
 
 	token, err := client.AddOTPToken(
@@ -215,7 +215,7 @@ func (r *Router) OTPTokenAdd(c *fiber.Ctx) error {
 			Type:        ipa.TokenTypeTOTP,
 			Algorithm:   strings.ToLower(getHashAlgorithm().String()),
 			Description: desc,
-			NotBefore:   time.Now(),
+			NotBefore:   time.Now().UTC(),
 		})
 
 	if err != nil {

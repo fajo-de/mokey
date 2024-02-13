@@ -206,9 +206,9 @@ func (r *Router) LoginOAuthPost(username, challenge string, c *fiber.Ctx) error 
 }
 
 func (r *Router) HydraError(c *fiber.Ctx) error {
-	message := c.Query("error")
-	desc := c.Query("error_description")
-	hint := c.Query("error_hint")
+	message	:= c.Query("error")
+	desc	:= c.Query("error_description")
+	hint	:= c.Query("error_hint")
 
 	log.WithFields(log.Fields{
 		"message": message,

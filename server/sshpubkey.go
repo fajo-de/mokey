@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/gofiber/fiber/v2"
 	log "github.com/sirupsen/logrus"
-	ipa "github.com/ubccr/goipa"
+	ipa "github.com/ubccr/mokey/ipa"
 )
 
 func (r *Router) SSHKeyList(c *fiber.Ctx) error {

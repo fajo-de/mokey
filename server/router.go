@@ -11,7 +11,7 @@ import (
 	hydra "github.com/ory/hydra-client-go/client"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	ipa "github.com/ubccr/goipa"
+	ipa "github.com/ubccr/mokey/ipa"
 )
 
 type Router struct {
@@ -96,60 +96,68 @@ func (r *Router) SetupRoutes(app *fiber.App) {
 	// CSRF tokens stored in sessions
 	app.Use(r.CSRF)
 
-	app.Get("/", r.RequireLogin, r.Index)
-	app.Get("/account", r.RequireLogin, r.Index)
-	app.Get("/password", r.RequireLogin, r.Index)
-	app.Get("/security", r.RequireLogin, r.Index)
-	app.Get("/sshkey", r.RequireLogin, r.Index)
-	app.Get("/otp", r.RequireLogin, r.Index)
+	app.Get("/",		r.RequireLogin, r.Index)
+	app.Get("/account",	r.RequireLogin, r.Index)
+	app.Get("/password",	r.RequireLogin, r.Index)
+	app.Get("/security",	r.RequireLogin, r.Index)
+	app.Get("/sshkey",	r.RequireLogin, r.Index)
+	app.Get("/otp",		r.RequireLogin, r.Index)
 
 	// Account Create
-	app.Get("/signup", r.RequireNoLogin, r.AccountCreate)
-	app.Post("/signup", r.RequireNoLogin, r.AccountCreate)
+	app.Get("/signup",	r.RequireNoLogin, r.AccountCreate)
+	if viper.GetBool("accounts.enable_user_signup") {
+		app.Post("/signup", r.RequireNoLogin, r.AccountCreate)
+	}
 
 	// Auth
-	app.Get("/auth/login", r.RequireNoLogin, r.Login)
-	app.Post("/auth/login", r.RequireNoLogin, r.CheckUser)
-	app.Post("/auth/authenticate", r.RequireNoLogin, r.Authenticate)
-	app.Post("/auth/expiredpw", r.RequireNoLogin, r.PasswordExpired)
-	app.Get("/auth/forgotpw", r.RequireNoLogin, r.PasswordForgot)
-	app.Post("/auth/forgotpw", r.RequireNoLogin, r.PasswordForgot)
-	app.Get("/auth/verify", r.RequireNoLogin, r.AccountVerifyResend)
-	app.Post("/auth/verify", r.RequireNoLogin, r.AccountVerifyResend)
-	app.Get("/auth/resetpw/:token", r.PasswordReset)
-	app.Post("/auth/resetpw/:token", r.PasswordReset)
-	app.Get("/auth/verify/:token", r.AccountVerify)
-	app.Post("/auth/verify/:token", r.AccountVerify)
-	app.Post("/auth/logout", r.Logout)
-	app.Get("/auth/captcha/:id.png", r.Captcha)
+	app.Get( "/auth/login",			r.RequireNoLogin, r.Login)
+	app.Post("/auth/login",			r.RequireNoLogin, r.CheckUser)
+	app.Post("/auth/authenticate",		r.RequireNoLogin, r.Authenticate)
+	app.Post("/auth/expiredpw",		r.RequireNoLogin, r.PasswordExpired)
+	app.Get( "/auth/forgotpw",		r.RequireNoLogin, r.PasswordForgot)
+	app.Post("/auth/forgotpw",		r.RequireNoLogin, r.PasswordForgot)
+	app.Get( "/auth/verify",		r.RequireNoLogin, r.AccountVerifyResend)
+	app.Post("/auth/verify",		r.RequireNoLogin, r.AccountVerifyResend)
+	app.Get( "/auth/resetpw/:token",	r.PasswordReset)
+	app.Post("/auth/resetpw/:token",	r.PasswordReset)
+	app.Get( "/auth/verify/:token",		r.AccountVerify)
+	app.Post("/auth/verify/:token",		r.AccountVerify)
+	app.Post("/auth/logout",		r.Logout)
+	app.Get( "/auth/captcha/:id.png",	r.Captcha)
 
 	// Account Settings
 	app.Get("/account/settings", r.RequireLogin, r.RequireHTMX, r.AccountSettings)
-	app.Post("/account/settings", r.RequireLogin, r.RequireHTMX, r.AccountSettings)
+	if !viper.GetBool("accounts.user_details_readonly") {
+		app.Post("/account/settings", r.RequireLogin, r.RequireHTMX, r.AccountSettings)
+	}
 
 	// Password
-	app.Get("/password/change", r.RequireLogin, r.RequireHTMX, r.PasswordChange)
+	app.Get( "/password/change", r.RequireLogin, r.RequireHTMX, r.PasswordChange)
 	app.Post("/password/change", r.RequireLogin, r.RequireHTMX, r.PasswordChange)
 
 	// Security
 	app.Get("/security/settings", r.RequireLogin, r.RequireHTMX, r.SecurityList)
-	app.Post("/security/mfa/enable", r.RequireLogin, r.RequireHTMX, r.TwoFactorEnable)
-	app.Post("/security/mfa/disable", r.RequireLogin, r.RequireHTMX, r.TwoFactorDisable)
+	if viper.GetBool("accounts.enable_user_security") {
+		app.Post("/security/mfa/enable",  r.RequireLogin, r.RequireHTMX, r.TwoFactorEnable)
+		app.Post("/security/mfa/disable", r.RequireLogin, r.RequireHTMX, r.TwoFactorDisable)
+	}
 
 	// SSH Keys
-	app.Get("/sshkey/list", r.RequireLogin, r.RequireHTMX, r.SSHKeyList)
+	app.Get("/sshkey/list",  r.RequireLogin, r.RequireHTMX, r.SSHKeyList)
 	app.Get("/sshkey/modal", r.RequireLogin, r.RequireHTMX, r.SSHKeyModal)
-	app.Post("/sshkey/add", r.RequireLogin, r.RequireMFA, r.RequireHTMX, r.SSHKeyAdd)
-	app.Post("/sshkey/remove", r.RequireLogin, r.RequireMFA, r.RequireHTMX, r.SSHKeyRemove)
+	if viper.GetBool("accounts.enable_user_sshkey") {
+		app.Post("/sshkey/add",    r.RequireLogin, r.RequireMFA, r.RequireHTMX, r.SSHKeyAdd)
+		app.Post("/sshkey/remove", r.RequireLogin, r.RequireMFA, r.RequireHTMX, r.SSHKeyRemove)
+	}
 
 	// OTP Tokens
-	app.Get("/otptoken/list", r.RequireLogin, r.RequireHTMX, r.OTPTokenList)
-	app.Get("/otptoken/modal", r.RequireLogin, r.RequireHTMX, r.OTPTokenModal)
-	app.Post("/otptoken/add", r.RequireLogin, r.RequireHTMX, r.OTPTokenAdd)
-	app.Post("/otptoken/verify", r.RequireLogin, r.RequireHTMX, r.OTPTokenVerify)
-	app.Post("/otptoken/remove", r.RequireLogin, r.RequireHTMX, r.OTPTokenRemove)
-	app.Post("/otptoken/enable", r.RequireLogin, r.RequireHTMX, r.OTPTokenEnable)
-	app.Post("/otptoken/disable", r.RequireLogin, r.RequireHTMX, r.OTPTokenDisable)
+	app.Get("/otptoken/list",	r.RequireLogin, r.RequireHTMX, r.OTPTokenList)
+	app.Get("/otptoken/modal",	r.RequireLogin, r.RequireHTMX, r.OTPTokenModal)
+	app.Post("/otptoken/add",	r.RequireLogin, r.RequireHTMX, r.OTPTokenAdd)
+	app.Post("/otptoken/verify",	r.RequireLogin, r.RequireHTMX, r.OTPTokenVerify)
+	app.Post("/otptoken/remove",	r.RequireLogin, r.RequireHTMX, r.OTPTokenRemove)
+	app.Post("/otptoken/enable",	r.RequireLogin, r.RequireHTMX, r.OTPTokenEnable)
+	app.Post("/otptoken/disable",	r.RequireLogin, r.RequireHTMX, r.OTPTokenDisable)
 
 	if viper.IsSet("site.logo") {
 		app.Get("/images/logo", r.Logo)
@@ -161,8 +169,8 @@ func (r *Router) SetupRoutes(app *fiber.App) {
 
 	if viper.IsSet("hydra.admin_url") {
 		app.Get("/oauth/consent", r.ConsentGet)
-		app.Get("/oauth/login", r.LoginOAuthGet)
-		app.Get("/oauth/error", r.HydraError)
+		app.Get("/oauth/login",	  r.LoginOAuthGet)
+		app.Get("/oauth/error",   r.HydraError)
 	}
 
 	// Prometheus metrics

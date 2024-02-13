@@ -1,6 +1,7 @@
 body {
 	background: #f9f9f9;
-	font-family: "Roboto", sans-serif;
+	font-family: "Cantarell", sans-serif;
+	font-size: smaller;
 }
 
 .main-content {
@@ -96,4 +97,27 @@ body {
 }
 .btn-alternate-show:hover {
   display: block;
+}
+
+/* overrides */
+.bt-login-head {
+  background-color: #5514b4!important;
+}
+.btn-primary {
+  background-color: #0055bb!important;
+  border-color: #0055bb!important;
+}
+.btn-primary:focus {
+  box-shadow: 0 0 0 0.15rem #56a3ff!important;
+}
+.form-control:focus {
+  box-shadow: 0 0 0 0.15rem #56a3ff!important;
+}
+.nav-pills .nav-link.active {
+  background-color: #016ae8;
+}
+
+.bg-dark {
+    --bs-bg-opacity: 1;
+    background-color: #016ae8!important;
 }

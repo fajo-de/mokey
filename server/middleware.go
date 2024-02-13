@@ -46,9 +46,9 @@ func NotFoundHandler(c *fiber.Ctx) error {
 }
 
 func HTTPErrorHandler(c *fiber.Ctx, err error) error {
-	username := c.Locals(ContextKeyUser)
-	path := c.Path()
-	code := fiber.StatusInternalServerError
+	username	:= c.Locals(ContextKeyUser)
+	path		:= c.Path()
+	code		:= fiber.StatusInternalServerError
 
 	if e, ok := err.(*fiber.Error); ok {
 		code = e.Code

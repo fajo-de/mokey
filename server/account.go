@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	ipa "github.com/ubccr/goipa"
+	ipa "github.com/ubccr/mokey/ipa"
 )
 
 func (r *Router) AccountSettings(c *fiber.Ctx) error {
@@ -25,8 +25,8 @@ func (r *Router) AccountSettings(c *fiber.Ctx) error {
 		return c.Render("account.html", vars)
 	}
 
-	user.First = strings.TrimSpace(c.FormValue("first"))
-	user.Last = strings.TrimSpace(c.FormValue("last"))
+	user.First  = strings.TrimSpace(c.FormValue("first"))
+	user.Last   = strings.TrimSpace(c.FormValue("last"))
 	user.Mobile = strings.TrimSpace(c.FormValue("phone"))
 
 	if user.First == "" || user.Last == "" {
@@ -73,14 +73,15 @@ func (r *Router) AccountCreate(c *fiber.Ctx) error {
 	}
 
 	user := &ipa.User{}
-	user.Username = strings.TrimSpace(c.FormValue("username"))
-	user.Email = strings.TrimSpace(c.FormValue("email"))
-	user.First = strings.TrimSpace(c.FormValue("first"))
-	user.Last = strings.TrimSpace(c.FormValue("last"))
-	password := c.FormValue("password")
-	passwordConfirm := c.FormValue("password2")
-	captchaID := c.FormValue("captcha_id")
-	captchaSol := c.FormValue("captcha_sol")
+	user.Username	= strings.TrimSpace(c.FormValue("username"))
+	user.Email	= strings.TrimSpace(c.FormValue("email"))
+	user.First	= strings.TrimSpace(c.FormValue("first"))
+	user.Last	= strings.TrimSpace(c.FormValue("last"))
+	
+	password	:= c.FormValue("password")
+	passwordConfirm	:= c.FormValue("password2")
+	captchaID	:= c.FormValue("captcha_id")
+	captchaSol	:= c.FormValue("captcha_sol")
 
 	err := r.accountCreate(user, password, passwordConfirm, captchaID, captchaSol)
 	if err != nil {
@@ -142,9 +143,9 @@ func (r *Router) accountCreate(user *ipa.User, password, passwordConfirm, captch
 		return err
 	}
 
-	user.HomeDir = filepath.Join(viper.GetString("accounts.default_homedir"), user.Username)
-	user.Shell = viper.GetString("accounts.default_shell")
-	user.Category = UserCategoryUnverified
+	user.HomeDir	= filepath.Join(viper.GetString("accounts.default_homedir"), user.Username)
+	user.Shell	= viper.GetString("accounts.default_shell")
+	user.Category	= UserCategoryUnverified
 
 	userRec, err := r.adminClient.UserAddWithPassword(user, password)
 	if err != nil {

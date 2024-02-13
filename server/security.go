@@ -42,9 +42,9 @@ func (r *Router) TwoFactorDisable(c *fiber.Ctx) error {
 }
 
 func (r *Router) TwoFactorEnable(c *fiber.Ctx) error {
-	client := r.userClient(c)
-	vars := fiber.Map{}
-	user := r.user(c)
+	client	:= r.userClient(c)
+	vars	:= fiber.Map{}
+	user	:= r.user(c)
 
 	tokens, err := client.FetchOTPTokens(user.Username)
 	if err != nil {

@@ -1,0 +1,7 @@
+
+# possible command line arguments
+#  --config=path	Path to the configuration file (required)
+#  --loglevel=string	Log level: trace,debug,info,warn,error (default: info)
+
+OPTIONS="--config=/etc/mokey/mokey.toml --loglevel=info"
+

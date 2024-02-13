@@ -15,11 +15,11 @@ import (
 
 var (
 	serveCmd = &cobra.Command{
-		Use:   "serve",
-		Short: "Run server",
-		Long:  `Run server`,
-		RunE: func(command *cobra.Command, args []string) error {
-			return serve()
+		Use:	"serve",
+		Short:	"Run server",
+		Long:	`Run server`,
+		RunE:	func(command *cobra.Command, args []string) error {
+				return serve()
 		},
 	}
 )
@@ -30,10 +30,13 @@ func init() {
 
 	serveCmd.Flags().String("listen", "0.0.0.0:8866", "address to listen on")
 	viper.BindPFlag("server.listen", serveCmd.Flags().Lookup("listen"))
+
 	serveCmd.Flags().String("cert", "", "path to ssl cert")
 	viper.BindPFlag("server.ssl_cert", serveCmd.Flags().Lookup("cert"))
+
 	serveCmd.Flags().String("key", "", "path to ssl key")
 	viper.BindPFlag("server.ssl_key", serveCmd.Flags().Lookup("key"))
+
 	serveCmd.Flags().String("dbpath", "", "path to mokey database")
 	viper.BindPFlag("storage.sqlite3.dbpath", serveCmd.Flags().Lookup("dbpath"))
 
@@ -55,7 +58,7 @@ func serve() error {
 		return err
 	}
 
-	srv.KeyFile = viper.GetString("server.ssl_key")
+	srv.KeyFile  = viper.GetString("server.ssl_key")
 	srv.CertFile = viper.GetString("server.ssl_cert")
 
 	go func() {

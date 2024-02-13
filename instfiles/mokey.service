@@ -1,0 +1,17 @@
+[Unit]
+Description=mokey server
+After=syslog.target network.target
+
+[Service]
+Type=simple
+User=mokey
+Group=mokey
+EnvironmentFile=-/etc/sysconfig/mokey
+WorkingDirectory=/var/lib/mokey
+ExecStart=/usr/bin/mokey serve $OPTIONS
+Restart=on-abort
+StateDirectory=mokey
+
+[Install]
+WantedBy=multi-user.target
+
