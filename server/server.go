@@ -146,17 +146,19 @@ func newFiber() (*fiber.App, error) {
 	}
 
 	app := fiber.New(fiber.Config{
-		Prefork:               false,
-		CaseSensitive:         true,
-		StrictRouting:         true,
-		ReadTimeout:           time.Duration(viper.GetInt("server.read_timeout")) * time.Second,
-		WriteTimeout:          time.Duration(viper.GetInt("server.write_timeout")) * time.Second,
-		IdleTimeout:           time.Duration(viper.GetInt("server.idle_timeout")) * time.Second,
-		AppName:               "mokey",
-		DisableStartupMessage: true,
-		PassLocalsToViews:     true,
-		ErrorHandler:          HTTPErrorHandler,
-		Views:                 engine,
+		Prefork:		false,
+		CaseSensitive:		true,
+		StrictRouting:         	true,
+		ReadTimeout:           	time.Duration(viper.GetInt("server.read_timeout")) * time.Second,
+		WriteTimeout:          	time.Duration(viper.GetInt("server.write_timeout")) * time.Second,
+		IdleTimeout:           	time.Duration(viper.GetInt("server.idle_timeout")) * time.Second,
+		AppName:               	"mokey",
+		DisableStartupMessage: 	true,
+		PassLocalsToViews:     	true,
+		ErrorHandler:          	HTTPErrorHandler,
+		Views:                 	engine,
+		ReadBufferSize:        	65536,
+		WriteBufferSize:	65536,
 	})
 
 	app.Use(frecover.New())
