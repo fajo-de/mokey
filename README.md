@@ -9,14 +9,14 @@ missing in FreeIPA.  This feature is not provided by default in FreeIPA, see
 [here](https://www.freeipa.org/page/Self-Service_Password_Reset) for more info
 and the rationale behind this decision. mokey is not a FreeIPA plugin but a
 complete standalone application that uses the FreeIPA JSON API.  mokey requires
-no changes to the underlying LDAP schema and uses a MariaDB database to store
-access tokens. The user experience and web interface can be customized to fit
-the requirements of an organization's look and feel. mokey is written in Go and
-released under a modified BSD license.
+no changes to the underlying LDAP schema and can use various types of storage
+methods to store access tokens. The user experience and web interface can be
+customized to fit the requirements of an organization's look and feel. mokey
+is written in Go and released under a modified BSD license.
 
 ## Project status
 
-mokey should be considered alpha software and used at your own risk. There are
+mokey should be considered beta software and used at your own risk. There are
 inherent security risks in providing features like self-service password resets
 and can make your systems vulnerable to abuse.
 
@@ -48,15 +48,14 @@ To install mokey download a copy of the pre-compiled binary [here](https://githu
 tar.gz archive:
 
 ```
-$ tar xvzf mokey-VERSION-linux-x86_64.tar.gz 
+$ tar xvzf mokey-VERSION.tar.gz
 ```
 
-deb, rpm packages:
+rpm packages:
 
 ```
-$ sudo dpkg -i mokey_VERSION_amd64.deb
+$ sudo rpm -ivh mokey-VERSION-DISTVER.DIST.x86_64.rpm
 
-$ sudo rpm -ivh mokey-VERSION-amd64.rpm
 ```
 
 ## Setup and configuration
@@ -79,6 +78,8 @@ $ ipa-getkeytab -s [your.ipa-master.server] -p mokeyapp -k /etc/mokey/private/mo
 $ chmod 640 /etc/mokey/private/mokeyapp.keytab
 $ chgrp mokey /etc/mokey/private/mokeyapp.keytab
 ```
+
+Alternatively a service account can be used to access FreeIPA.
 
 Edit mokey configuration file and set path to keytab file. The values for
 `token_secret` and `csrf_secret` will be automatically generated for you if
@@ -107,7 +108,7 @@ Start mokey service:
 
 ```
 $ systemctl restart mokey
-$ systemctl enable mokey
+$ systemctl enable  mokey
 ```
 
 ## SSH Public Key Management
