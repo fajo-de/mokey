@@ -1,9 +1,10 @@
 package filesystem
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -53,16 +54,23 @@ type Config struct {
 	//
 	// Optional. Default: ""
 	NotFoundFile string `json:"not_found_file"`
+
+	// The value for the Content-Type HTTP-header
+	// that is set on the file response
+	//
+	// Optional. Default: ""
+	ContentTypeCharset string `json:"content_type_charset"`
 }
 
 // ConfigDefault is the default config
 var ConfigDefault = Config{
-	Next:       nil,
-	Root:       nil,
-	PathPrefix: "",
-	Browse:     false,
-	Index:      "/index.html",
-	MaxAge:     0,
+	Next:               nil,
+	Root:               nil,
+	PathPrefix:         "",
+	Browse:             false,
+	Index:              "/index.html",
+	MaxAge:             0,
+	ContentTypeCharset: "",
 }
 
 // New creates a new middleware handler.
@@ -136,11 +144,11 @@ func New(config ...Config) fiber.Handler {
 			path = utils.TrimRight(path, '/')
 		}
 		file, err := cfg.Root.Open(path)
-		if err != nil && os.IsNotExist(err) && cfg.NotFoundFile != "" {
+		if err != nil && errors.Is(err, fs.ErrNotExist) && cfg.NotFoundFile != "" {
 			file, err = cfg.Root.Open(cfg.NotFoundFile)
 		}
 		if err != nil {
-			if os.IsNotExist(err) {
+			if errors.Is(err, fs.ErrNotExist) {
 				return c.Status(fiber.StatusNotFound).Next()
 			}
 			return fmt.Errorf("failed to open: %w", err)
@@ -172,11 +180,17 @@ func New(config ...Config) fiber.Handler {
 			return fiber.ErrForbidden
 		}
 
+		c.Status(fiber.StatusOK)
+
 		modTime := stat.ModTime()
 		contentLength := int(stat.Size())
 
 		// Set Content Type header
-		c.Type(getFileExtension(stat.Name()))
+		if cfg.ContentTypeCharset == "" {
+			c.Type(getFileExtension(stat.Name()))
+		} else {
+			c.Type(getFileExtension(stat.Name()), cfg.ContentTypeCharset)
+		}
 
 		// Set Last Modified header
 		if !modTime.IsZero() {
@@ -205,11 +219,13 @@ func New(config ...Config) fiber.Handler {
 	}
 }
 
-// SendFile ...
-func SendFile(c *fiber.Ctx, fs http.FileSystem, path string) error {
-	file, err := fs.Open(path)
+// SendFile serves a file from an HTTP file system at the specified path.
+// It handles content serving, sets appropriate headers, and returns errors when needed.
+// Usage: err := SendFile(ctx, fs, "/path/to/file.txt")
+func SendFile(c *fiber.Ctx, filesystem http.FileSystem, path string) error {
+	file, err := filesystem.Open(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return fiber.ErrNotFound
 		}
 		return fmt.Errorf("failed to open: %w", err)
@@ -223,7 +239,7 @@ func SendFile(c *fiber.Ctx, fs http.FileSystem, path string) error {
 	// Serve index if path is directory
 	if stat.IsDir() {
 		indexPath := utils.TrimRight(path, '/') + ConfigDefault.Index
-		index, err := fs.Open(indexPath)
+		index, err := filesystem.Open(indexPath)
 		if err == nil {
 			indexStat, err := index.Stat()
 			if err == nil {
@@ -237,6 +253,8 @@ func SendFile(c *fiber.Ctx, fs http.FileSystem, path string) error {
 	if stat.IsDir() {
 		return fiber.ErrForbidden
 	}
+
+	c.Status(fiber.StatusOK)
 
 	modTime := stat.ModTime()
 	contentLength := int(stat.Size())
