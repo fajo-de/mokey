@@ -43,13 +43,14 @@ install -m 0755 -d "$RPM_BUILD_ROOT"/usr/lib/systemd/system
 install -m 0755 -t "$RPM_BUILD_ROOT"/usr/bin				-s mokey
 install -m 0644 -t "$RPM_BUILD_ROOT"/usr/lib/systemd/system		instfiles/mokey.service
 install -m 0644 -t "$RPM_BUILD_ROOT"/etc/sysconfig			instfiles/mokey.sysconfig
-install -m 0640 -t "$RPM_BUILD_ROOT"/etc/mokey				mokey.toml
+install -m 0640 -t "$RPM_BUILD_ROOT"/etc/mokey				mokey.toml.sample
 
 # install templates
 /bin/cp -rdp server/templates "$RPM_BUILD_ROOT"/usr/share/mokey/
 
 # rename some files
 mv "$RPM_BUILD_ROOT"/etc/sysconfig/mokey{.sysconfig,}
+mv "$RPM_BUILD_ROOT"/etc/mokey/mokey.toml{.sample,}
 
 # change permissions on the templates
 find "$RPM_BUILD_ROOT"/usr/share/mokey -type f -exec /bin/chmod 0644 {} \;
