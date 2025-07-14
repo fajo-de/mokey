@@ -29,15 +29,15 @@ if [ "x$RPM_BUILD_ROOT" = "x" ] ; then
 fi
 
 # create directories
-#install -m 0755 -d "$RPM_BUILD_ROOT"/etc/sysconfig
+install -m 0755 -d "$RPM_BUILD_ROOT"/etc/sysconfig
 install -m 0750 -d "$RPM_BUILD_ROOT"/etc/mokey
 install -m 0750 -d "$RPM_BUILD_ROOT"/etc/mokey/private
-#install -m 0755 -d "$RPM_BUILD_ROOT"/usr/bin
+install -m 0755 -d "$RPM_BUILD_ROOT"/usr/bin
 install -m 0755 -d "$RPM_BUILD_ROOT"/usr/share/mokey
 install -m 0755 -d "$RPM_BUILD_ROOT"/usr/share/mokey/templates
 install -m 0755 -d "$RPM_BUILD_ROOT"/usr/share/mokey/templates/email
 install -m 0755 -d "$RPM_BUILD_ROOT"/usr/share/mokey/templates/static
-#install -m 0755 -d "$RPM_BUILD_ROOT"/usr/lib/systemd/system
+install -m 0755 -d "$RPM_BUILD_ROOT"/usr/lib/systemd/system
 
 # install files and directories
 install -m 0755 -t "$RPM_BUILD_ROOT"/usr/bin				-s mokey
