@@ -1,6 +1,6 @@
 
 Name:		mokey
-Version:	1.2.0
+Version:	1.3.0
 Release:	1%{?dist}
 Summary:	User self management for FreeIPA
 
@@ -80,6 +80,7 @@ if   [ $1 == 1 ] ; then
 	# fresh installation
 	systemctl daemon-reload ||:
 	chown -Rh root:mokey /etc/mokey/mokey.toml
+	chmod 0640 /etc/mokey/mokey.toml
 elif [ $1 == 2 ] ; then
 	# update
 	systemctl daemon-reload ||:
@@ -102,6 +103,9 @@ fi
 systemctl daemon-reload ||:
 
 %changelog
+* Fri Jul 25 2025 F. John <falk.john@fajo.de> - 0.6.5.25+8337af82
+- allow token start time to be disabled or set to UTC (HEAD -> master)
+
 * Fri Jul 25 2025 F. John <falk.john@fajo.de> - 0.6.5.23+44f79a69
 - add support for non-recursive group check to restrict access (HEAD -> master,
 
