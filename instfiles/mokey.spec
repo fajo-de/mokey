@@ -1,6 +1,6 @@
 
 Name:		mokey
-Version:	1.1.0
+Version:	1.2.0
 Release:	1%{?dist}
 Summary:	User self management for FreeIPA
 
@@ -102,6 +102,9 @@ fi
 systemctl daemon-reload ||:
 
 %changelog
+* Fri Jul 25 2025 F. John <falk.john@fajo.de> - 0.6.5.23+44f79a69
+- add support for non-recursive group check to restrict access (HEAD -> master,
+
 * Mon Jul 14 2025 dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com> - 0.6.5.19+9b59a6ba
 - Merge pull request #5 from fajo-de/dependabot/go_modules/golang.org/x/net-0.3
 - Bump golang.org/x/net from 0.29.0 to 0.38.0
