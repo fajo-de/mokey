@@ -203,20 +203,22 @@ func (r *Router) OTPTokenAdd(c *fiber.Ctx) error {
 
 	desc	:= c.FormValue("desc")
 
+	not_before :=  time.Now()
+	if viper.GetBool("accounts.token_start_time_utc") {
+		not_before = time.Now().UTC()
+	}
+
 	token	:= &ipa.OTPToken{
 		Type:        ipa.TokenTypeTOTP,
 		Algorithm:   strings.ToLower(getHashAlgorithm().String()),
 		Description: desc,
-		NotBefore:   time.Now().UTC(),
 	}
 
-	token, err := client.AddOTPToken(
-		&ipa.OTPToken{
-			Type:        ipa.TokenTypeTOTP,
-			Algorithm:   strings.ToLower(getHashAlgorithm().String()),
-			Description: desc,
-			NotBefore:   time.Now().UTC(),
-		})
+	if ! viper.GetBool("accounts.token_no_start_time") {
+		token.NotBefore = not_before
+	}
+
+	token, err := client.AddOTPToken(token)
 
 	if err != nil {
 		return err

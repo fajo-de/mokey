@@ -118,6 +118,11 @@ hide_invalid_username_error = false
 # prevent users from chaning their data (default: false)
 #user_details_readonly = true
 
+# do not set a start time for new tokens (default: false)
+#token_no_start_time = true
+
+# use UTC when creating a token (default: false)
+#token_start_time_utc=true
 
 #------------------------------------------------------------------------------
 # Email

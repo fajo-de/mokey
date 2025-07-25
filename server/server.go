@@ -54,6 +54,8 @@ func SetDefaults() {
 	viper.SetDefault("accounts.enable_user_security", true)
 	viper.SetDefault("accounts.user_details_readonly", false)
 	viper.SetDefault("accounts.hide_groups", false)
+	viper.SetDefault("accounts.token_no_start_time", false)
+	viper.SetDefault("accounts.token_start_time_utc", false)
 	viper.SetDefault("email.token_max_age", 3600)
 	viper.SetDefault("email.smtp_host", "localhost")
 	viper.SetDefault("email.smtp_port", 25)
