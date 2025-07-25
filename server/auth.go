@@ -22,6 +22,22 @@ func isBlocked(username string) bool {
 	return false
 }
 
+func isInReqGroup(userRec *ipa.User) bool {
+	reqGroup := viper.GetStringSlice("accounts.require_group")
+
+	if reqGroup == nil || len(reqGroup) == 0 {
+		return true
+	}
+
+	for _, g := range reqGroup {
+		if userRec.HasGroup(g) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (r *Router) isLoggedIn(c *fiber.Ctx) (bool, error) {
 	sess, err := r.session(c)
 	if err != nil {
@@ -199,6 +215,14 @@ func (r *Router) CheckUser(c *fiber.Ctx) error {
 		}
 	}
 
+	if ! isInReqGroup(userRec) {
+		log.WithFields(log.Fields{
+			"username": username,
+		}).Warn("AUDIT User account is blocked from logging in (not in allowed group)")
+		r.metrics.totalFailedLogins.Inc()
+		return c.Status(fiber.StatusUnauthorized).SendString("Invalid username")
+	}
+
 	if userRec.Locked {
 		log.WithFields(log.Fields{
 			"username": username,
@@ -242,8 +266,40 @@ func (r *Router) Authenticate(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).SendString("Invalid credentials")
 	}
 
+	userRec, err := r.adminClient.UserShow(username)
+        if err != nil {
+                if ierr, ok := err.(*ipa.IpaError); ok && ierr.Code == 4001 {
+                        log.WithFields(log.Fields{
+                                "error":    ierr,
+                                "username": username,
+                        }).Warn("Username not found in FreeIPA")
+
+                        if !viper.GetBool("accounts.hide_invalid_username_error") {
+                                r.metrics.totalFailedLogins.Inc()
+                                return c.Status(fiber.StatusUnauthorized).SendString("Invalid username")
+                        }
+                        userRec = new(ipa.User)
+                        userRec.Username = username
+                } else {
+                        log.WithFields(log.Fields{
+                                "error":    err,
+                                "username": username,
+                        }).Error("Failed to fetch user info from FreeIPA")
+                        r.metrics.totalFailedLogins.Inc()
+                        return c.Status(fiber.StatusInternalServerError).SendString("Fatal system error")
+                }
+        }
+
+        if ! isInReqGroup(userRec) {
+                log.WithFields(log.Fields{
+                        "username": username,
+                }).Warn("AUDIT User account is blocked from logging in (not in allowed group)")
+                r.metrics.totalFailedLogins.Inc()
+                return c.Status(fiber.StatusUnauthorized).SendString("Invalid username")
+        }
+
 	client := ipa.NewDefaultClient()
-	err := client.RemoteLogin(username, password+otp)
+	err = client.RemoteLogin(username, password+otp)
 	if err != nil {
 		switch {
 		case errors.Is(err, ipa.ErrExpiredPassword):
