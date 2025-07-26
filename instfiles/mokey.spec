@@ -1,6 +1,6 @@
 
 Name:		mokey
-Version:	1.3.0
+Version:	1.4.0
 Release:	1%{?dist}
 Summary:	User self management for FreeIPA
 
@@ -103,6 +103,9 @@ fi
 systemctl daemon-reload ||:
 
 %changelog
+* Sat Jul 26 2025 F. John <falk.john@fajo.de> - 0.6.5.27+420ecf88
+- add support for indirect group membership (HEAD -> master, support_indirect_groups)
+
 * Fri Jul 25 2025 F. John <falk.john@fajo.de> - 0.6.5.25+8337af82
 - allow token start time to be disabled or set to UTC (HEAD -> master)
 
