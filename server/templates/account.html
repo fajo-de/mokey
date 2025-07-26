@@ -86,9 +86,23 @@
 	{{ if not (ConfigValueBool "accounts.hide_groups") }}
 	<div class="col-md-12">
 		<div class="mb-3">
-		  	<label class="form-label">Groups</label>
+		  	<label class="form-label">Direct Groups</label>
 			<div class="form-control-plaintext">
 				{{ range $g := .user.Groups }}
+				<span class="badge rounded-pill bg-dark">{{ $g }}</span>
+				{{ else }}
+				&nbsp;
+				{{ end }}
+			 </div>
+		</div>
+	</div>
+	{{ end }}
+	{{ if not (ConfigValueBool "accounts.hide_indirect_groups") }}
+	<div class="col-md-12">
+		<div class="mb-3">
+		  	<label class="form-label">Indirect Groups</label>
+			<div class="form-control-plaintext">
+				{{ range $g := .user.IndirectGroups }}
 				<span class="badge rounded-pill bg-dark">{{ $g }}</span>
 				{{ else }}
 				&nbsp;

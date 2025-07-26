@@ -80,8 +80,17 @@ otp_issuer = "MYORG"
 # Require user to be member of a specific group (1st level)
 #require_group = ["groupname1", "groupname1"]
 
+# Do not check indirect group membership (default: false)
+#require_group_no_indirect = true
+
 # Extract username from email address
 username_from_email = false
+
+# Hide groups (default: false)
+#hide_groups = true
+
+# Hide indirect groups (default: true)
+#hide_indirect_groups = false
 
 # Allowed domains. Format is {"domain": "username-generator"}, where
 # username-generator can be one of the following username generator algorithms:

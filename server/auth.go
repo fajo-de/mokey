@@ -35,6 +35,15 @@ func isInReqGroup(userRec *ipa.User) bool {
 		}
 	}
 
+	noindirect := viper.GetBool("accounts.require_group_no_indirect")
+	if ! noindirect {
+		for _, g := range reqGroup {
+			if userRec.HasIndirectGroup(g) {
+				return true
+			}
+		}
+	}
+
 	return false
 }
 

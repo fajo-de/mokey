@@ -32,6 +32,7 @@ type User struct {
 	Uid              string              `json:"uidnumber"`
 	Gid              string              `json:"gidnumber"`
 	Groups           []string            `json:"memberof_group"`
+	IndirectGroups   []string            `json:"memberofindirect_group"`
 	SSHAuthKeys      []*SSHAuthorizedKey `json:"ipasshpubkey"`
 	AuthTypes        []string            `json:"ipauserauthtype"`
 	HasKeytab        bool                `json:"has_keytab"`
@@ -146,6 +147,10 @@ func (u *User) fromJSON(raw []byte) error {
 		u.Groups = append(u.Groups, value.String())
 		return true
 	})
+	res.Get("memberofindirect_group").ForEach(func(key, value gjson.Result) bool {
+                u.IndirectGroups = append(u.IndirectGroups, value.String())
+                return true
+        })
 	res.Get("ipasshpubkey").ForEach(func(key, value gjson.Result) bool {
 		k, err := NewSSHAuthorizedKey(value.String())
 		if err == nil {
@@ -191,6 +196,17 @@ func (u *User) HasGroup(group string) bool {
 	}
 
 	return false
+}
+
+// Returns true if the User is in group
+func (u *User) HasIndirectGroup(group string) bool {
+        for _, g := range u.IndirectGroups {
+                if g == group {
+                        return true
+                }
+        }
+
+        return false
 }
 
 // Removes ssh authorized key
