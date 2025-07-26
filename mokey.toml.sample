@@ -170,6 +170,9 @@ signature = ""
 # From email address
 from = "support@example.com"
 
+# From name
+#from_name = "Identity Management"
+
 # subject line prefix and suffix
 #subject_prefix = ""
 #subject_suffix = ""
