@@ -35,7 +35,7 @@
 	<p>Hello {{$.user.First}} {{$.user.Last}},</p>
 	<p>thanks for creating an account at <i>{{$.site_name}}</i>.</p>
 	{{ if ConfigValueBool "accounts.require_mfa" }}
-	<p>You <strong>must</stong> enable Two-Factor authentication on your account.
+	<p>You <strong>must</strong> enable Two-Factor authentication on your account.
 	   Please login and create a new OTP token using your authenticator app.</p>
 	{{ end }}
 	{{ with ConfigValueString "site.getting_started_url" }}
