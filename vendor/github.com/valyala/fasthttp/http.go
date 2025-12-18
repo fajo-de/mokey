@@ -45,7 +45,8 @@ type Request struct {
 	multipartForm         *multipart.Form
 	multipartFormBoundary string
 
-	postArgs Args
+	postArgs   Args
+	userValues userData
 
 	bodyRaw []byte
 
@@ -65,6 +66,7 @@ type Request struct {
 	// Group bool members in order to reduce Request object size.
 	parsedURI      bool
 	parsedPostArgs bool
+	uriParseErr    error
 
 	keepBodyBuffer bool
 
@@ -145,12 +147,14 @@ func (req *Request) Host() []byte {
 func (req *Request) SetRequestURI(requestURI string) {
 	req.Header.SetRequestURI(requestURI)
 	req.parsedURI = false
+	req.uriParseErr = nil
 }
 
 // SetRequestURIBytes sets RequestURI.
 func (req *Request) SetRequestURIBytes(requestURI []byte) {
 	req.Header.SetRequestURIBytes(requestURI)
 	req.parsedURI = false
+	req.uriParseErr = nil
 }
 
 // RequestURI returns request's URI.
@@ -190,6 +194,16 @@ func (req *Request) ConnectionClose() bool {
 // SetConnectionClose sets 'Connection: close' header.
 func (req *Request) SetConnectionClose() {
 	req.Header.SetConnectionClose()
+}
+
+// GetTimeOut retrieves the timeout duration set for the Request.
+//
+// This method returns a time.Duration that determines how long the request
+// can wait before it times out. In the default use case, the timeout applies
+// to the entire request lifecycle, including both receiving the response
+// headers and the response body.
+func (req *Request) GetTimeOut() time.Duration {
+	return req.timeout
 }
 
 // SendFile registers file on the given path to be used as response body
@@ -335,6 +349,7 @@ type ReadCloserWithError interface {
 
 type closeReader struct {
 	io.Reader
+
 	closeFunc func(err error) error
 }
 
@@ -367,6 +382,11 @@ func (w *responseBodyWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
+func (w *responseBodyWriter) WriteString(s string) (int, error) {
+	w.r.AppendBodyString(s)
+	return len(s), nil
+}
+
 type requestBodyWriter struct {
 	r *Request
 }
@@ -376,7 +396,12 @@ func (w *requestBodyWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func (resp *Response) parseNetConn(conn net.Conn) {
+func (w *requestBodyWriter) WriteString(s string) (int, error) {
+	w.r.AppendBodyString(s)
+	return len(s), nil
+}
+
+func (resp *Response) ParseNetConn(conn net.Conn) {
 	resp.raddr = conn.RemoteAddr()
 	resp.laddr = conn.LocalAddr()
 }
@@ -869,6 +894,7 @@ func (req *Request) copyToSkipBody(dst *Request) {
 
 	req.uri.CopyTo(&dst.uri)
 	dst.parsedURI = req.parsedURI
+	dst.uriParseErr = req.uriParseErr
 
 	req.postArgs.CopyTo(&dst.postArgs)
 	dst.parsedPostArgs = req.parsedPostArgs
@@ -938,19 +964,22 @@ func (req *Request) SetURI(newURI *URI) {
 	if newURI != nil {
 		newURI.CopyTo(&req.uri)
 		req.parsedURI = true
+		req.uriParseErr = nil
 		return
 	}
 	req.uri.Reset()
 	req.parsedURI = false
+	req.uriParseErr = nil
 }
 
 func (req *Request) parseURI() error {
 	if req.parsedURI {
-		return nil
+		return req.uriParseErr
 	}
-	req.parsedURI = true
 
-	return req.uri.parse(req.Header.Host(), req.Header.RequestURI(), req.isTLS)
+	req.parsedURI = true
+	req.uriParseErr = req.uri.parse(req.Header.Host(), req.Header.RequestURI(), req.isTLS)
+	return req.uriParseErr
 }
 
 // PostArgs returns POST arguments.
@@ -1109,6 +1138,7 @@ func readMultipartForm(r io.Reader, boundary string, size, maxInMemoryFileSize i
 
 // Reset clears request contents.
 func (req *Request) Reset() {
+	req.userValues.Reset() // it should be at the top, since some values might implement io.Closer interface
 	if requestBodyPoolSizeLimit >= 0 && req.body != nil {
 		req.ReleaseBody(requestBodyPoolSizeLimit)
 	}
@@ -1123,6 +1153,7 @@ func (req *Request) resetSkipHeader() {
 	req.ResetBody()
 	req.uri.Reset()
 	req.parsedURI = false
+	req.uriParseErr = nil
 	req.postArgs.Reset()
 	req.parsedPostArgs = false
 	req.isTLS = false
@@ -1269,7 +1300,7 @@ func (req *Request) MayContinue() bool {
 // then ErrBodyTooLarge is returned.
 func (req *Request) ContinueReadBody(r *bufio.Reader, maxBodySize int, preParseMultipartForm ...bool) error {
 	var err error
-	contentLength := req.Header.realContentLength()
+	contentLength := req.Header.ContentLength()
 	if contentLength > 0 {
 		if maxBodySize > 0 && contentLength > maxBodySize {
 			return ErrBodyTooLarge
@@ -1352,7 +1383,7 @@ func (req *Request) ReadBody(r *bufio.Reader, contentLength, maxBodySize int) (e
 // then ErrBodyTooLarge is returned.
 func (req *Request) ContinueReadBodyStream(r *bufio.Reader, maxBodySize int, preParseMultipartForm ...bool) error {
 	var err error
-	contentLength := req.Header.realContentLength()
+	contentLength := req.Header.ContentLength()
 	if contentLength > 0 {
 		if len(preParseMultipartForm) == 0 || preParseMultipartForm[0] {
 			// Pre-read multipart form data of known length.
@@ -1429,7 +1460,7 @@ func (resp *Response) ReadLimitBody(r *bufio.Reader, maxBodySize int) error {
 	if err != nil {
 		return err
 	}
-	if resp.Header.StatusCode() == StatusContinue {
+	if resp.Header.statusCode == StatusContinue {
 		// Read the next response according to http://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html .
 		if err = resp.Header.Read(r); err != nil {
 			return err
@@ -1476,8 +1507,12 @@ func (resp *Response) ReadBody(r *bufio.Reader, maxBodySize int) (err error) {
 			bodyBuf.B, err = readBodyChunked(r, maxBodySize, bodyBuf.B)
 		}
 	default:
-		bodyBuf.B, err = readBodyIdentity(r, maxBodySize, bodyBuf.B)
-		resp.Header.SetContentLength(len(bodyBuf.B))
+		if resp.StreamBody {
+			resp.bodyStream = acquireRequestStream(bodyBuf, r, &resp.Header)
+		} else {
+			bodyBuf.B, err = readBodyIdentity(r, maxBodySize, bodyBuf.B)
+			resp.Header.SetContentLength(len(bodyBuf.B))
+		}
 	}
 	if err == nil && resp.StreamBody && resp.bodyStream == nil {
 		resp.bodyStream = bytes.NewReader(bodyBuf.B)
@@ -1524,6 +1559,12 @@ type statsWriter struct {
 
 func (w *statsWriter) Write(p []byte) (int, error) {
 	n, err := w.w.Write(p)
+	w.bytesWritten += int64(n)
+	return n, err
+}
+
+func (w *statsWriter) WriteString(s string) (int, error) {
+	n, err := w.w.Write(s2b(s))
 	w.bytesWritten += int64(n)
 	return n, err
 }
@@ -1580,9 +1621,8 @@ func (req *Request) Write(w *bufio.Writer) error {
 		if len(req.Header.Host()) == 0 {
 			if len(host) == 0 {
 				return errRequestHostRequired
-			} else {
-				req.Header.SetHostBytes(host)
 			}
+			req.Header.SetHostBytes(host)
 		} else if !req.UseHostHeader {
 			req.Header.SetHostBytes(host)
 		}
@@ -1954,6 +1994,10 @@ func (w *flushWriter) Write(p []byte) (int, error) {
 	return n, nil
 }
 
+func (w *flushWriter) WriteString(s string) (int, error) {
+	return w.Write(s2b(s))
+}
+
 // Write writes response to w.
 //
 // Write doesn't flush response to w for performance reasons.
@@ -2127,6 +2171,84 @@ func (resp *Response) String() string {
 	return getHTTPString(resp)
 }
 
+// SetUserValue stores the given value (arbitrary object)
+// under the given key in Request.
+//
+// The value stored in Request may be obtained by UserValue*.
+//
+// This functionality may be useful for passing arbitrary values between
+// functions involved in request processing.
+//
+// All the values are removed from Request after returning from the top
+// RequestHandler. Additionally, Close method is called on each value
+// implementing io.Closer before removing the value from Request.
+func (req *Request) SetUserValue(key, value any) {
+	req.userValues.Set(key, value)
+}
+
+// SetUserValueBytes stores the given value (arbitrary object)
+// under the given key in Request.
+//
+// The value stored in Request may be obtained by UserValue*.
+//
+// This functionality may be useful for passing arbitrary values between
+// functions involved in request processing.
+//
+// All the values stored in Request are deleted after returning from RequestHandler.
+func (req *Request) SetUserValueBytes(key []byte, value any) {
+	req.userValues.SetBytes(key, value)
+}
+
+// UserValue returns the value stored via SetUserValue* under the given key.
+func (req *Request) UserValue(key any) any {
+	return req.userValues.Get(key)
+}
+
+// UserValueBytes returns the value stored via SetUserValue*
+// under the given key.
+func (req *Request) UserValueBytes(key []byte) any {
+	return req.userValues.GetBytes(key)
+}
+
+// VisitUserValues calls visitor for each existing userValue with a key that is a string or []byte.
+//
+// visitor must not retain references to key and value after returning.
+// Make key and/or value copies if you need storing them after returning.
+func (req *Request) VisitUserValues(visitor func([]byte, any)) {
+	for i, n := 0, len(req.userValues); i < n; i++ {
+		kv := &req.userValues[i]
+		if _, ok := kv.key.(string); ok {
+			visitor(s2b(kv.key.(string)), kv.value)
+		}
+	}
+}
+
+// VisitUserValuesAll calls visitor for each existing userValue.
+//
+// visitor must not retain references to key and value after returning.
+// Make key and/or value copies if you need storing them after returning.
+func (req *Request) VisitUserValuesAll(visitor func(any, any)) {
+	for i, n := 0, len(req.userValues); i < n; i++ {
+		kv := &req.userValues[i]
+		visitor(kv.key, kv.value)
+	}
+}
+
+// ResetUserValues allows to reset user values from Request Context.
+func (req *Request) ResetUserValues() {
+	req.userValues.Reset()
+}
+
+// RemoveUserValue removes the given key and the value under it in Request.
+func (req *Request) RemoveUserValue(key any) {
+	req.userValues.Remove(key)
+}
+
+// RemoveUserValueBytes removes the given key and the value under it in Request.
+func (req *Request) RemoveUserValueBytes(key []byte) {
+	req.userValues.RemoveBytes(key)
+}
+
 func getHTTPString(hw httpWriter) string {
 	w := bytebufferpool.Get()
 	defer bytebufferpool.Put(w)
@@ -2209,18 +2331,107 @@ func writeBodyFixedSize(w *bufio.Writer, r io.Reader, size int64) error {
 	return err
 }
 
+// copyZeroAlloc optimizes io.Copy by calling ReadFrom or WriteTo only when
+// copying between os.File and net.TCPConn. If the reader has a WriteTo
+// method, it uses WriteTo for copying; if the writer has a ReadFrom method,
+// it uses ReadFrom for copying. If neither method is available, it gets a
+// buffer from sync.Pool to perform the copy.
+//
+// io.CopyBuffer always uses the WriterTo or ReadFrom interface if it's
+// available. however, os.File and net.TCPConn unfortunately have a
+// fallback in their WriterTo that calls io.Copy if sendfile isn't possible.
+//
+// See issue: https://github.com/valyala/fasthttp/issues/1889
+//
+// sendfile can only be triggered when copying between os.File and net.TCPConn.
+// Since the function confirming zero-copy is a private function, we use
+// ReadFrom only in this specific scenario. For all other cases, we prioritize
+// using our own copyBuffer method.
+//
+// o: our copyBuffer
+// r: readFrom
+// w: writeTo
+//
+// write\read *File  *TCPConn  writeTo  other
+// *File        o       r         w       o
+// *TCPConn    w,r      o         w       o
+// readFrom     r       r         w       r
+// other        o       o         w       o
+//
+//nolint:dupword
 func copyZeroAlloc(w io.Writer, r io.Reader) (int64, error) {
-	if wt, ok := r.(io.WriterTo); ok {
-		return wt.WriteTo(w)
+	var readerIsFile, readerIsConn bool
+
+	switch r := r.(type) {
+	case *os.File:
+		readerIsFile = true
+	case *net.TCPConn:
+		readerIsConn = true
+	case io.WriterTo:
+		return r.WriteTo(w)
 	}
-	if rt, ok := w.(io.ReaderFrom); ok {
-		return rt.ReadFrom(r)
+
+	switch w := w.(type) {
+	case *os.File:
+		if readerIsConn {
+			return w.ReadFrom(r)
+		}
+	case *net.TCPConn:
+		if readerIsFile {
+			// net.WriteTo requires go1.22 or later
+			// Benchmark tests show that on Windows, WriteTo performs
+			// significantly better than ReadFrom. On Linux, however,
+			// ReadFrom slightly outperforms WriteTo. When possible,
+			// copyZeroAlloc aims to perform  better than or as well
+			// as io.Copy, so we use WriteTo whenever possible for
+			// optimal performance.
+			if rt, ok := r.(io.WriterTo); ok {
+				return rt.WriteTo(w)
+			}
+			return w.ReadFrom(r)
+		}
+	case io.ReaderFrom:
+		return w.ReadFrom(r)
 	}
+
 	vbuf := copyBufPool.Get()
 	buf := vbuf.([]byte)
-	n, err := io.CopyBuffer(w, r, buf)
+	n, err := copyBuffer(w, r, buf)
 	copyBufPool.Put(vbuf)
 	return n, err
+}
+
+// copyBuffer is rewritten from io.copyBuffer. We do not check if src has a
+// WriteTo method, if dst has a ReadFrom method, or if buf is empty.
+func copyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err error) {
+	for {
+		nr, er := src.Read(buf)
+		if nr > 0 {
+			nw, ew := dst.Write(buf[0:nr])
+			if nw < 0 || nr < nw {
+				nw = 0
+				if ew == nil {
+					ew = errors.New("invalid write result")
+				}
+			}
+			written += int64(nw)
+			if ew != nil {
+				err = ew
+				break
+			}
+			if nr != nw {
+				err = io.ErrShortWrite
+				break
+			}
+		}
+		if er != nil {
+			if er != io.EOF {
+				err = er
+			}
+			break
+		}
+	}
+	return written, err
 }
 
 var copyBufPool = sync.Pool{
@@ -2407,17 +2618,24 @@ func parseChunkSize(r *bufio.Reader) (int, error) {
 		c, err := r.ReadByte()
 		if err != nil {
 			return -1, ErrBrokenChunk{
-				error: fmt.Errorf("cannot read '\r' char at the end of chunk size: %w", err),
+				error: fmt.Errorf("cannot read '\\r' char at the end of chunk size: %w", err),
 			}
 		}
 		// Skip chunk extension after chunk size.
 		// Add support later if anyone needs it.
 		if c != '\r' {
+			// Security: Don't allow newlines in chunk extensions.
+			// This can lead to request smuggling issues with some reverse proxies.
+			if c == '\n' {
+				return -1, ErrBrokenChunk{
+					error: errors.New("invalid character '\\n' after chunk size"),
+				}
+			}
 			continue
 		}
 		if err := r.UnreadByte(); err != nil {
 			return -1, ErrBrokenChunk{
-				error: fmt.Errorf("cannot unread '\r' char at the end of chunk size: %w", err),
+				error: fmt.Errorf("cannot unread '\\r' char at the end of chunk size: %w", err),
 			}
 		}
 		break

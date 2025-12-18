@@ -68,6 +68,8 @@ func (r *Router) ConsentGet(c *fiber.Ctx) error {
 		Session: &models.ConsentRequestSession{
 			IDToken: map[string]interface{}{
 				"uid":         string(user.Username),
+				"preferred_username": string(user.Username),
+				"name":        string(user.DisplayName),
 				"first":       string(user.First),
 				"last":        string(user.Last),
 				"given_name":  string(user.First),
