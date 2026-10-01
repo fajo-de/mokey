@@ -1,6 +1,6 @@
 
 Name:		mokey
-Version:	1.4.0
+Version:	1.4.1
 Release:	1%{?dist}
 Summary:	User self management for FreeIPA
 
