@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/ory/hydra-client-go/client/admin"
@@ -74,7 +73,7 @@ func (r *Router) ConsentGet(c *fiber.Ctx) error {
 				"last":        string(user.Last),
 				"given_name":  string(user.First),
 				"family_name": string(user.Last),
-				"groups":      strings.Join(user.Groups, ";"),
+				"groups":      user.Groups,
 				"email":       string(user.Email),
 			},
 		}})
