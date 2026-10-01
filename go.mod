@@ -82,7 +82,7 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tinylib/msgp v1.2.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	go.mongodb.org/mongo-driver v1.15.0 // indirect
+	go.mongodb.org/mongo-driver v1.17.7 // indirect
 	go.opentelemetry.io/otel v1.26.0 // indirect
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
 	go.opentelemetry.io/otel/trace v1.26.0 // indirect
