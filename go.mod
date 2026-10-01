@@ -21,7 +21,7 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	github.com/valyala/fasthttp v1.68.0
 	golang.org/x/crypto v0.52.0
-	golang.org/x/net v0.54.0
+	golang.org/x/net v0.55.0
 )
 
 require (
