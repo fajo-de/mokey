@@ -23,10 +23,6 @@ github.com/clipperhouse/stringish
 ## explicit; go 1.18
 github.com/clipperhouse/uax29/v2/graphemes
 github.com/clipperhouse/uax29/v2/internal/iterators
-# github.com/coreos/go-oidc v2.2.1+incompatible
-## explicit
-# github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-## explicit
 # github.com/dchest/captcha v1.0.0
 ## explicit; go 1.18
 github.com/dchest/captcha
@@ -120,13 +116,9 @@ github.com/gofiber/storage/redis/v3
 # github.com/gofiber/storage/sqlite3/v2 v2.1.1
 ## explicit; go 1.19
 github.com/gofiber/storage/sqlite3/v2
-# github.com/golang/protobuf v1.5.4
-## explicit; go 1.17
 # github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
-# github.com/gorilla/mux v1.8.1
-## explicit; go 1.20
 # github.com/hashicorp/go-uuid v1.0.3
 ## explicit
 github.com/hashicorp/go-uuid
@@ -263,12 +255,6 @@ github.com/pelletier/go-toml/v2/unstable
 # github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c
 ## explicit; go 1.20
 github.com/philhofer/fwd
-# github.com/pkg/errors v0.9.1
-## explicit
-# github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-## explicit
-# github.com/pquerna/cachecontrol v0.1.0
-## explicit; go 1.16
 # github.com/pquerna/otp v1.4.0
 ## explicit; go 1.12
 github.com/pquerna/otp
@@ -351,8 +337,6 @@ github.com/spf13/viper/internal/encoding/json
 github.com/spf13/viper/internal/encoding/toml
 github.com/spf13/viper/internal/encoding/yaml
 github.com/spf13/viper/internal/features
-# github.com/stretchr/testify v1.9.0
-## explicit; go 1.17
 # github.com/subosito/gotenv v1.6.0
 ## explicit; go 1.18
 github.com/subosito/gotenv
@@ -368,10 +352,6 @@ github.com/tidwall/pretty
 # github.com/tinylib/msgp v1.2.5
 ## explicit; go 1.20
 github.com/tinylib/msgp/msgp
-# github.com/ubccr/goipa v0.0.7
-## explicit; go 1.20
-# github.com/urfave/negroni v1.0.0
-## explicit
 # github.com/valyala/bytebufferpool v1.0.0
 ## explicit
 github.com/valyala/bytebufferpool
@@ -417,8 +397,8 @@ go.opentelemetry.io/otel/trace/embedded
 # go.uber.org/multierr v1.11.0
 ## explicit; go 1.19
 go.uber.org/multierr
-# golang.org/x/crypto v0.45.0
-## explicit; go 1.24.0
+# golang.org/x/crypto v0.52.0
+## explicit; go 1.25.0
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/chacha20poly1305
@@ -436,22 +416,20 @@ golang.org/x/exp/slices
 golang.org/x/exp/slog
 golang.org/x/exp/slog/internal
 golang.org/x/exp/slog/internal/buffer
-# golang.org/x/net v0.47.0
-## explicit; go 1.24.0
+# golang.org/x/net v0.54.0
+## explicit; go 1.25.0
 golang.org/x/net/http2/hpack
 golang.org/x/net/xsrftoken
-# golang.org/x/oauth2 v0.18.0
-## explicit; go 1.18
-# golang.org/x/sync v0.18.0
-## explicit; go 1.24.0
+# golang.org/x/sync v0.20.0
+## explicit; go 1.25.0
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.38.0
-## explicit; go 1.24.0
+# golang.org/x/sys v0.45.0
+## explicit; go 1.25.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.31.0
-## explicit; go 1.24.0
+# golang.org/x/text v0.37.0
+## explicit; go 1.25.0
 golang.org/x/text/encoding
 golang.org/x/text/encoding/internal
 golang.org/x/text/encoding/internal/identifier
@@ -460,8 +438,6 @@ golang.org/x/text/internal/utf8internal
 golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-# google.golang.org/appengine v1.6.8
-## explicit; go 1.11
 # google.golang.org/protobuf v1.34.1
 ## explicit; go 1.17
 google.golang.org/protobuf/encoding/protodelim
@@ -495,8 +471,6 @@ google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/ini.v1 v1.67.0
 ## explicit
 gopkg.in/ini.v1
-# gopkg.in/square/go-jose.v2 v2.6.0
-## explicit
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
